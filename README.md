@@ -1,17 +1,12 @@
-# flutter_bobonyenyak
+# BoboNyenyak
 
-A new Flutter project.
+BoboNyenyak adalah aplikasi mobile yang dikembangkan oleh **The Winner** untuk membantu pengguna mengenali permasalahan tidur dan meningkatkan kualitas tidur melalui informasi serta fitur yang mendukung kebiasaan tidur yang lebih baik.
 
-## Getting Started
+Project ini dikembangkan menggunakan **Flutter** dan **Dart** sebagai bagian dari proyek pengembangan aplikasi mobile.
 
-This project is a starting point for a Flutter application.
+## Anggota Kelompok
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Nama Anggota 1 (Project Manager)** — [@username](https://github.com/username)
+- **Nama Anggota 2 (UI/UX Designer)** — [@username](https://github.com/username)
+- **Nama Anggota 3 (Frontend Developer)** — [@username](https://github.com/username)
+- **Kevin Yulian Pamungkas (Backend Developer)** — [@kvinn-dev](https://github.com/kvinn-dev)
