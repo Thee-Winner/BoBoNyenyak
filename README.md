@@ -8,5 +8,5 @@ Project ini dikembangkan menggunakan **Flutter** dan **Dart** sebagai bagian dar
 
 - **Nama Anggota 1 (Project Manager)** — [@username](https://github.com/username)
 - **Rayyan Aulia Rifai Putra (UI/UX Designer)** — [@auliarayyan3-create](https://github.com/auliarayyan3-create)
-- **Nama Anggota 3 (Frontend Developer)** — [@username](https://github.com/username)
+- **Muhammad Chairul Sholeh (Frontend Developer)** — [@chrulls85](https://github.com/chrulls85)
 - **Kevin Yulian Pamungkas (Backend Developer)** — [@kvinn-dev](https://github.com/kvinn-dev)
