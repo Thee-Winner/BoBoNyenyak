@@ -1,30 +1,70 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_bobonyenyak/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  setUp(() async {
+    TestFirebaseCoreHostApi.setUp(_MockFirebaseCore());
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'test-api-key',
+        appId: 'test-app-id',
+        messagingSenderId: 'test-sender-id',
+        projectId: 'test-project',
+      ),
+    );
   });
+
+  testWidgets('App opens on the branded startup screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Memeriksa sesi...'), findsOneWidget);
+    expect(
+      find.text('You have pushed the button this many times:'),
+      findsNothing,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+}
+
+class _MockFirebaseCore implements TestFirebaseCoreHostApi {
+  CoreFirebaseOptions get _options => CoreFirebaseOptions(
+    apiKey: 'test-api-key',
+    appId: 'test-app-id',
+    messagingSenderId: 'test-sender-id',
+    projectId: 'test-project',
+  );
+
+  @override
+  Future<CoreInitializeResponse> initializeApp(
+    String appName,
+    CoreFirebaseOptions initializeAppRequest,
+  ) async {
+    return CoreInitializeResponse(
+      name: appName,
+      options: initializeAppRequest,
+      pluginConstants: {},
+    );
+  }
+
+  @override
+  Future<List<CoreInitializeResponse>> initializeCore() async => [
+    CoreInitializeResponse(
+      name: defaultFirebaseAppName,
+      options: _options,
+      pluginConstants: {},
+    ),
+  ];
+
+  @override
+  Future<CoreFirebaseOptions> optionsFromResource() async => _options;
 }
