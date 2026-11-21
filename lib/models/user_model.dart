@@ -21,14 +21,11 @@ class UserModel {
     required this.updatedAt,
   });
 
-  /// Whether this user has the 'admin' role.
-  bool get isAdmin => role == 'admin';
-
   /// Whether this user has the 'user' role.
   bool get isUser => role == 'user';
 
-  /// Whether the role is valid (either 'user' or 'admin').
-  bool get hasValidRole => isAdmin || isUser;
+  /// Whether the role is valid.
+  bool get hasValidRole => role == 'user';
 
   /// Creates a [UserModel] from a Firestore document snapshot.
   factory UserModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {

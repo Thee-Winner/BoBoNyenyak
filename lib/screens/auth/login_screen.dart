@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import '../config/app_theme.dart';
-import '../services/auth_service.dart';
-import '../services/user_service.dart';
-import '../models/user_model.dart';
-import '../utils/validators.dart';
-import '../widgets/bobo_logo.dart';
-import '../widgets/shared_widgets.dart';
+import '../../config/app_theme.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+import '../../models/user_model.dart';
+import '../../utils/validators.dart';
+import '../../widgets/bobo_logo.dart';
+import '../../widgets/shared_widgets.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import 'user_dashboard_screen.dart';
-import 'admin_dashboard_screen.dart';
+import '../tracker/user_dashboard_screen.dart';
 
 /// Login screen — email/password authentication via Firebase.
 ///
@@ -65,23 +64,14 @@ class _LoginScreenState extends State<LoginScreen> {
         throw 'Terjadi kesalahan saat masuk. Silakan coba lagi.';
       }
 
-      // 2. Read profile from Firestore to determine role
+      // 2. Read profile from Firestore
       final UserModel profile = await _userService.getUserProfile(uid);
-
-      if (!profile.hasValidRole) {
-        await _authService.signOut();
-        throw 'Akun Anda tidak memiliki izin akses yang valid. Hubungi administrator.';
-      }
 
       if (!mounted) return;
 
-      // 3. Navigate based on role
-      final Widget destination = profile.isAdmin
-          ? AdminDashboardScreen(user: profile)
-          : UserDashboardScreen(user: profile);
-
+      // 3. Navigate to Dashboard
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => destination),
+        MaterialPageRoute(builder: (_) => UserDashboardScreen(user: profile)),
       );
     } catch (e) {
       if (mounted) {

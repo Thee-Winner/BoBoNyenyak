@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../config/app_theme.dart';
-import '../services/auth_service.dart';
-import '../services/user_service.dart';
-import '../models/user_model.dart';
-import '../widgets/bobo_logo.dart';
-import 'login_screen.dart';
-import 'user_dashboard_screen.dart';
-import 'admin_dashboard_screen.dart';
+import '../../config/app_theme.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+import '../../models/user_model.dart';
+import '../../widgets/bobo_logo.dart';
+import '../auth/login_screen.dart';
+import '../tracker/user_dashboard_screen.dart';
 
 /// Functional splash screen that checks Firebase auth state on launch.
 ///
@@ -96,11 +95,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (!mounted) return;
 
-      if (profile.isAdmin) {
-        _navigateTo(AdminDashboardScreen(user: profile));
-      } else {
-        _navigateTo(UserDashboardScreen(user: profile));
-      }
+      _navigateTo(UserDashboardScreen(user: profile));
     } catch (_) {
       // Profile not found or error — sign out
       await _authService.signOut();
@@ -111,8 +106,8 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateTo(Widget screen) {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => screen,
-        transitionsBuilder: (_, animation, __, child) {
+        pageBuilder: (context, animation, secondaryAnimation) => screen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
         transitionDuration: const Duration(milliseconds: 400),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../config/app_theme.dart';
-import '../services/auth_service.dart';
-import '../services/user_service.dart';
-import '../models/user_model.dart';
-import '../utils/validators.dart';
-import '../widgets/bobo_logo.dart';
-import '../widgets/shared_widgets.dart';
+import '../../config/app_theme.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+import '../../models/user_model.dart';
+import '../../utils/validators.dart';
+import '../../widgets/bobo_logo.dart';
+import '../../widgets/shared_widgets.dart';
 import 'login_screen.dart';
-import 'user_dashboard_screen.dart';
+import '../tracker/user_dashboard_screen.dart';
 
 /// Register screen — creates a Firebase Auth account + Firestore profile.
 ///

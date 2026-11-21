@@ -86,40 +86,4 @@ class UserService {
       throw 'Gagal memperbarui profil. Silakan coba lagi.';
     }
   }
-
-  /// Returns the total number of registered users.
-  ///
-  /// Used by the admin dashboard. Returns 0 on failure.
-  Future<int> getTotalUserCount() async {
-    try {
-      final snapshot = await _usersCollection.get();
-      return snapshot.docs.length;
-    } catch (_) {
-      return 0;
-    }
-  }
-
-  /// Returns the count of users with role 'user'.
-  Future<int> getRegularUserCount() async {
-    try {
-      final snapshot = await _usersCollection
-          .where('role', isEqualTo: 'user')
-          .get();
-      return snapshot.docs.length;
-    } catch (_) {
-      return 0;
-    }
-  }
-
-  /// Returns the count of users with role 'admin'.
-  Future<int> getAdminCount() async {
-    try {
-      final snapshot = await _usersCollection
-          .where('role', isEqualTo: 'admin')
-          .get();
-      return snapshot.docs.length;
-    } catch (_) {
-      return 0;
-    }
-  }
 }

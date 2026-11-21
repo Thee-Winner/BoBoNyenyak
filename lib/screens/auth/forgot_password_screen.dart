@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../config/app_theme.dart';
-import '../services/auth_service.dart';
-import '../utils/validators.dart';
-import '../widgets/bobo_logo.dart';
-import '../widgets/shared_widgets.dart';
+import '../../config/app_theme.dart';
+import '../../services/auth_service.dart';
+import '../../utils/validators.dart';
+import '../../widgets/bobo_logo.dart';
+import '../../widgets/shared_widgets.dart';
 
 /// Forgot Password screen — sends a password reset email via Firebase.
 ///

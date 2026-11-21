@@ -309,7 +309,6 @@ users/{uid}
     │       ├── createdAt
     │       ├── updatedAt
     │       ├── createdBy
-    │       └── schemaVersion
     │
     └── notificationSettings/{settingId}
         ├── enabled
@@ -352,16 +351,15 @@ Merepresentasikan profil bayi yang dipantau oleh pengguna.
 
 Merepresentasikan satu catatan aktivitas tidur bayi.
 
-| Atribut         | Tipe             | Keterangan                                      |
-| --------------- | ---------------- | ----------------------------------------------- |
-| `recordId`      | String           | ID dokumen catatan tidur.                       |
-| `startAt`       | Timestamp        | Waktu mulai tidur.                              |
-| `endAt`         | Timestamp / null | Waktu bangun; null jika sesi masih berlangsung. |
-| `note`          | String / null    | Catatan tambahan.                               |
-| `createdAt`     | Timestamp        | Waktu catatan dibuat.                           |
-| `updatedAt`     | Timestamp        | Waktu catatan diperbarui.                       |
-| `createdBy`     | String           | UID pengguna pembuat catatan.                   |
-| `schemaVersion` | Integer          | Versi struktur data.                            |
+| Atribut     | Tipe             | Keterangan                                      |
+| ----------- | ---------------- | ----------------------------------------------- |
+| `recordId`  | String           | ID dokumen catatan tidur.                       |
+| `startAt`   | Timestamp        | Waktu mulai tidur.                              |
+| `endAt`     | Timestamp / null | Waktu bangun; null jika sesi masih berlangsung. |
+| `note`      | String / null    | Catatan tambahan.                               |
+| `createdAt` | Timestamp        | Waktu catatan dibuat.                           |
+| `updatedAt` | Timestamp        | Waktu catatan diperbarui.                       |
+| `createdBy` | String           | UID pengguna pembuat catatan.                   |
 
 #### NotificationSettings
 
