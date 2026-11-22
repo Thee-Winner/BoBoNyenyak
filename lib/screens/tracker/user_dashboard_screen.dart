@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../config/app_theme.dart';
+import '../../config/bobo_colors.dart';
 import '../../models/baby_profile_model.dart';
 import '../../models/sleep_record_model.dart';
 import '../../models/user_model.dart';
@@ -13,6 +14,7 @@ import '../../widgets/bobo_bottom_navbar.dart';
 import '../../widgets/daily_summary_card.dart';
 import '../auth/login_screen.dart';
 import '../history/sleep_history_screen.dart';
+import '../settings/settings_screen.dart';
 import '../trends/sleep_trends_screen.dart';
 import 'add_sleep_record_screen.dart';
 
@@ -179,10 +181,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bgDark = Color(0xFF0F1528);
+    final colors = BoboColors.of(context);
 
     return Scaffold(
-      backgroundColor: bgDark,
+      backgroundColor: colors.bg,
       body: SafeArea(
         child: _isLoadingBaby
             ? const Center(
@@ -210,7 +212,13 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ? SleepTrendsScreen(uid: widget.user.uid, baby: _currentBaby!)
             : _buildPlaceholderPage('Tren & Pola Tidur', Icons.insights_rounded);
       case 3:
-        return _buildPlaceholderPage('Pengaturan', Icons.settings_rounded);
+        return _currentBaby != null
+            ? SettingsScreen(
+                user: widget.user,
+                baby: _currentBaby!,
+                onBabyUpdated: () => _loadInitialBabyProfile(),
+              )
+            : _buildPlaceholderPage('Pengaturan', Icons.settings_rounded);
       default:
         return _buildTrackerPage();
     }
@@ -280,7 +288,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   }
 
   Widget _buildHeaderBar(bool isSleeping) {
-    const cardDark = Color(0xFF182238);
+    final colors = BoboColors.of(context);
 
     return Row(
       children: [
@@ -296,17 +304,21 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF132B2B),
+            color: colors.isDark ? const Color(0xFF132B2B) : const Color(0xFFD1FAE5),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.sync_rounded, size: 14, color: Color(0xFF34D399)),
-              SizedBox(width: 4),
+              Icon(
+                Icons.sync_rounded,
+                size: 14,
+                color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+              ),
+              const SizedBox(width: 4),
               Text(
                 'Tersinkron',
                 style: TextStyle(
-                  color: Color(0xFF34D399),
+                  color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -319,11 +331,15 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
         // Notification / Logout Icon
         Container(
-          decoration: BoxDecoration(color: cardDark, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: colors.cardBg,
+            shape: BoxShape.circle,
+            border: colors.isDark ? null : Border.all(color: colors.border),
+          ),
           child: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.logout_rounded,
-              color: Colors.white70,
+              color: colors.textSecondary,
               size: 18,
             ),
             onPressed: _handleLogout,
@@ -335,6 +351,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   }
 
   Widget _buildInfoChips() {
+    final colors = BoboColors.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -349,7 +367,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             Text(
               'Pelacakan untuk: ${_currentBaby!.name}',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
+                color: colors.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -358,8 +376,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF182238),
+            color: colors.cardBg,
             borderRadius: BorderRadius.circular(12),
+            border: colors.isDark ? null : Border.all(color: colors.border),
           ),
           child: const Text(
             'Suhu: 22.4°C',
@@ -378,15 +397,25 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     SleepRecordModel? activeSession,
     bool isSleeping,
   ) {
-    const cardDark = Color(0xFF182238);
-    const accentYellow = Color(0xFFFBBF24);
+    final colors = BoboColors.of(context);
+    final accentYellow = colors.accentYellow;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
-        color: cardDark,
+        color: colors.cardBg,
         borderRadius: BorderRadius.circular(24),
+        border: colors.isDark ? null : Border.all(color: colors.border),
+        boxShadow: colors.isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         children: [
@@ -394,7 +423,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF222C46),
+              color: colors.isDark ? const Color(0xFF222C46) : const Color(0xFFEEF2F6),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -408,8 +437,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 const SizedBox(width: 6),
                 Text(
                   isSleeping ? 'BAYI SEDANG TIDUR' : 'BAYI SEDANG BANGUN',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -424,8 +453,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           // Circular Sleep Timer Display
           Builder(
             builder: (context) {
-              // Target durasi tidur bayi (default: 8 jam = 480 menit).
-              // Progress bernilai 0.0 sampai 1.0 (penuh di posisi jam 12).
               const double targetSleepMinutes = 8.0 * 60.0;
               final double progress = isSleeping
                   ? (_runningDuration.inSeconds / (targetSleepMinutes * 60.0))
@@ -441,7 +468,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 8,
-                      backgroundColor: const Color(0xFF263255),
+                      backgroundColor: colors.isDark ? const Color(0xFF263255) : const Color(0xFFE2E8F0),
                       color: accentYellow,
                     ),
                   ),
@@ -452,7 +479,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         isSleeping
                             ? Icons.bedtime_rounded
                             : Icons.wb_twilight_rounded,
-                        color: Colors.white70,
+                        color: colors.textMuted,
                         size: 24,
                       ),
                       const SizedBox(height: 8),
@@ -460,8 +487,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         isSleeping
                             ? _formatRunningDuration(_runningDuration)
                             : '00j 00m 00s',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -474,7 +501,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         style: TextStyle(
                           color: isSleeping
                               ? accentYellow
-                              : Colors.white.withValues(alpha: 0.5),
+                              : colors.textMuted,
                           fontSize: 11,
                           fontWeight: isSleeping
                               ? FontWeight.w600
@@ -494,8 +521,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           if (isSleeping && activeSession != null) ...[
             Text(
               'Mulai tertidur pukul ${_formatTime(activeSession.startAt)}',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -504,14 +531,14 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             Text(
               'Target Bangun: 07:00 WIB',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: colors.textMuted,
                 fontSize: 11,
               ),
             ),
           ] else ...[
-            const Text(
+            Text(
               'Sentuh tombol di bawah saat bayi mulai tertidur',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
             ),
           ],
 
@@ -547,7 +574,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               'Ketuk saat si kecil terbangun untuk menghentikan & menyimpan sesi',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.4),
+                color: colors.textMuted,
                 fontSize: 11,
               ),
             ),
@@ -642,10 +669,10 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   }
 
   Widget _buildRhythmContent(List<SleepRecordModel> allRecords) {
-    const cardDark = Color(0xFF182238);
-    const accentYellow = Color(0xFFFBBF24);
-    const purpleAccent = Color(0xFF818CF8);
-    const grayAccent = Color(0xFF263255);
+    final colors = BoboColors.of(context);
+    final accentYellow = colors.accentYellow;
+    final purpleAccent = colors.accentPurple;
+    final grayAccent = colors.accentGray;
 
     final now = DateTime.now();
     // Monday of the current week (weekday: 1=Mon .. 7=Sun)
@@ -721,8 +748,18 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardDark,
+        color: colors.cardBg,
         borderRadius: BorderRadius.circular(18),
+        border: colors.isDark ? null : Border.all(color: colors.border),
+        boxShadow: colors.isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,14 +767,14 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  CircleAvatar(radius: 4, backgroundColor: Color(0xFF818CF8)),
-                  SizedBox(width: 8),
+                  const CircleAvatar(radius: 4, backgroundColor: Color(0xFF818CF8)),
+                  const SizedBox(width: 8),
                   Text(
                     'Ritme & Gelombang Tidur',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -747,13 +784,13 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF263255),
+                  color: colors.isDark ? const Color(0xFF263255) : const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   '$nyenyakPercent% Nyenyak',
-                  style: const TextStyle(
-                    color: Colors.amber,
+                  style: TextStyle(
+                    color: colors.isDark ? Colors.amber : const Color(0xFFB45309),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -787,7 +824,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                   Text(
                     day,
                     style: TextStyle(
-                      color: isToday ? accentYellow : Colors.white54,
+                      color: isToday
+                          ? (colors.isDark ? accentYellow : const Color(0xFFB45309))
+                          : colors.textMuted,
                       fontSize: 10,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -797,28 +836,28 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             }).toList(),
           ),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white10),
+          Divider(color: colors.divider),
           const SizedBox(height: 8),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
                   Icon(
                     Icons.graphic_eq_rounded,
-                    color: Colors.white54,
+                    color: colors.textMuted,
                     size: 14,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
                     'Noise Kamar: 28 dB (Tenang)',
-                    style: TextStyle(color: Colors.white60, fontSize: 11),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 11),
                   ),
                 ],
               ),
               Text(
                 'Suhu: Nyaman',
-                style: TextStyle(color: Colors.white60, fontSize: 11),
+                style: TextStyle(color: colors.textSecondary, fontSize: 11),
               ),
             ],
           ),

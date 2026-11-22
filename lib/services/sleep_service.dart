@@ -198,13 +198,13 @@ class SleepService {
       59,
     );
 
-    return _sleepRecordsCollection(uid, babyId)
-        .snapshots()
-        .map((snapshot) {
+    return _sleepRecordsCollection(uid, babyId).snapshots().map((snapshot) {
       final list = snapshot.docs
           .map((doc) => SleepRecordModel.fromFirestore(doc))
-          .where((r) =>
-              !r.startAt.isBefore(startOfDay) && !r.startAt.isAfter(endOfDay))
+          .where(
+            (r) =>
+                !r.startAt.isBefore(startOfDay) && !r.startAt.isAfter(endOfDay),
+          )
           .toList();
       list.sort((a, b) => b.startAt.compareTo(a.startAt));
       return list;
@@ -217,9 +217,7 @@ class SleepService {
     required String uid,
     required String babyId,
   }) {
-    return _sleepRecordsCollection(uid, babyId)
-        .snapshots()
-        .map((snapshot) {
+    return _sleepRecordsCollection(uid, babyId).snapshots().map((snapshot) {
       final list = snapshot.docs
           .map((doc) => SleepRecordModel.fromFirestore(doc))
           .toList();
@@ -227,6 +225,47 @@ class SleepService {
       list.sort((a, b) => b.startAt.compareTo(a.startAt));
       return list;
     });
+  }
+
+  /// Updates an existing baby profile.
+  Future<void> updateBabyProfile({
+    required String uid,
+    required String babyId,
+    required String name,
+    required DateTime birthDate,
+    String? gender,
+  }) async {
+    try {
+      await _babyProfilesCollection(uid).doc(babyId).update({
+        'name': name,
+        'birthDate': Timestamp.fromDate(birthDate),
+        'gender': gender,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      throw 'Gagal memperbarui profil bayi: $e';
+    }
+  }
+
+  /// Adds a new baby profile.
+  Future<BabyProfileModel> addBabyProfile({
+    required String uid,
+    required String name,
+    required DateTime birthDate,
+    String? gender,
+  }) async {
+    try {
+      final newBaby = BabyProfileModel.createNew(
+        name: name,
+        birthDate: birthDate,
+        gender: gender,
+      );
+      final docRef = await _babyProfilesCollection(uid)
+          .add(newBaby.toFirestore());
+      return newBaby.copyWith(id: docRef.id);
+    } catch (e) {
+      throw 'Gagal menambah profil bayi: $e';
+    }
   }
 
   /// Deletes a sleep record.

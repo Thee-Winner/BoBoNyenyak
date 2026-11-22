@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/bobo_colors.dart';
 import '../models/baby_profile_model.dart';
 
 /// Reusable Baby Profile Header Pill displaying baby name, age, and sleeping state.
@@ -16,7 +17,7 @@ class BabyProfileHeaderPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cardDark = Color(0xFF182238);
+    final colors = BoboColors.of(context);
 
     return InkWell(
       onTap: onTap,
@@ -24,8 +25,9 @@ class BabyProfileHeaderPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: cardDark,
+          color: colors.cardBg,
           borderRadius: BorderRadius.circular(24),
+          border: colors.isDark ? null : Border.all(color: colors.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -45,13 +47,13 @@ class BabyProfileHeaderPill extends StatelessWidget {
                   children: [
                     Text(
                       '${baby.name} (${baby.displayAge})',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_rounded, color: Colors.white70, size: 18),
+                    Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted, size: 18),
                   ],
                 ),
                 Row(
@@ -62,15 +64,16 @@ class BabyProfileHeaderPill extends StatelessWidget {
                       height: 6,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isSleeping ? Colors.greenAccent : Colors.orangeAccent,
+                        color: isSleeping ? const Color(0xFF34D399) : Colors.orangeAccent,
                       ),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       isSleeping ? 'Tidur Aktif' : 'Sedang Bangun',
                       style: TextStyle(
-                        color: isSleeping ? Colors.greenAccent : Colors.orangeAccent,
+                        color: isSleeping ? const Color(0xFF34D399) : Colors.orangeAccent,
                         fontSize: 10,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],

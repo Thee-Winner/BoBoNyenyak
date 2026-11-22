@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/bobo_colors.dart';
 import '../models/baby_profile_model.dart';
 import '../models/sleep_record_model.dart';
 
@@ -17,7 +18,7 @@ class DailySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cardDark = Color(0xFF182238);
+    final colors = BoboColors.of(context);
 
     final totalMinutes = todayRecords.fold<int>(
       0,
@@ -43,10 +44,10 @@ class DailySummaryCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Ringkasan Hari Ini',
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -54,19 +55,19 @@ class DailySummaryCard extends StatelessWidget {
             if (onDetailTap != null)
               InkWell(
                 onTap: onDetailTap,
-                child: const Row(
+                child: Row(
                   children: [
                     Text(
                       'Detail Harian',
                       style: TextStyle(
-                        color: Colors.amber,
+                        color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      color: Colors.amber,
+                      color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                       size: 12,
                     ),
                   ],
@@ -82,8 +83,18 @@ class DailySummaryCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cardDark,
+                  color: colors.cardBg,
                   borderRadius: BorderRadius.circular(18),
+                  border: colors.isDark ? null : Border.all(color: colors.border),
+                  boxShadow: colors.isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,8 +118,8 @@ class DailySummaryCard extends StatelessWidget {
                           ),
                           child: Text(
                             '$percentAchieved%',
-                            style: const TextStyle(
-                              color: Colors.greenAccent,
+                            style: TextStyle(
+                              color: colors.isDark ? Colors.greenAccent : Colors.green.shade700,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -120,15 +131,15 @@ class DailySummaryCard extends StatelessWidget {
                     Text(
                       'Total Tidur',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: colors.textMuted,
                         fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       totalStr,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -137,7 +148,7 @@ class DailySummaryCard extends StatelessWidget {
                     Text(
                       'Target $targetRangeLabel',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: colors.textMuted,
                         fontSize: 10,
                       ),
                     ),
@@ -151,8 +162,18 @@ class DailySummaryCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: cardDark,
+                  color: colors.cardBg,
                   borderRadius: BorderRadius.circular(18),
+                  border: colors.isDark ? null : Border.all(color: colors.border),
+                  boxShadow: colors.isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,9 +181,9 @@ class DailySummaryCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.access_time_filled_rounded,
-                          color: Colors.amber,
+                          color: colors.isDark ? Colors.amber : const Color(0xFFD97706),
                           size: 20,
                         ),
                         Container(
@@ -176,8 +197,8 @@ class DailySummaryCard extends StatelessWidget {
                           ),
                           child: Text(
                             sessionCount > 0 ? 'Tercatat' : 'Belum Ada',
-                            style: const TextStyle(
-                              color: Colors.tealAccent,
+                            style: TextStyle(
+                              color: colors.isDark ? Colors.tealAccent : Colors.teal.shade700,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -189,15 +210,15 @@ class DailySummaryCard extends StatelessWidget {
                     Text(
                       'Jumlah Sesi',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: colors.textMuted,
                         fontSize: 11,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$sessionCount Sesi',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -208,7 +229,7 @@ class DailySummaryCard extends StatelessWidget {
                           ? '$nightSessions Malam • $napSessions Siang'
                           : 'Belum ada sesi hari ini',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: colors.textMuted,
                         fontSize: 10,
                       ),
                     ),

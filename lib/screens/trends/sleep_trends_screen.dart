@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../config/bobo_colors.dart';
 import '../../models/baby_profile_model.dart';
 import '../../models/sleep_record_model.dart';
 import '../../services/sleep_service.dart';
@@ -9,7 +10,7 @@ import '../../widgets/baby_profile_pill.dart';
 import '../../widgets/bobo_card.dart';
 
 /// Screen for Visualisasi Pola Tidur (Trends / Circadian sleep pattern analysis).
-/// Implements FR-VIS-01 to FR-VIS-08.
+/// Implements FR-VIS-01 to FR-VIS-08 supporting Dark & Light modes.
 class SleepTrendsScreen extends StatefulWidget {
   final String uid;
   final BabyProfileModel baby;
@@ -65,10 +66,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     'Des',
   ];
 
-  // Helper to get start and end dates of the selected 7-day period (Monday to Sunday)
   DateTime get _startOfSelectedWeek {
     final now = DateTime.now();
-    // Monday of current week
     final currentMonday = DateTime(
       now.year,
       now.month,
@@ -95,11 +94,10 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bgDark = Color(0xFF0F1528);
-    const accentYellow = Color(0xFFFBBF24);
+    final colors = BoboColors.of(context);
 
     return Scaffold(
-      backgroundColor: bgDark,
+      backgroundColor: colors.bg,
       body: SafeArea(
         child: StreamBuilder<List<SleepRecordModel>>(
           stream: _sleepService.streamAllSleepRecords(
@@ -108,8 +106,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: accentYellow),
+              return Center(
+                child: CircularProgressIndicator(color: colors.accentYellow),
               );
             }
 
@@ -119,19 +117,19 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeaderBar(),
+                  _buildHeaderBar(colors),
                   const SizedBox(height: 16),
-                  _buildPageTitle(),
+                  _buildPageTitle(colors),
                   const SizedBox(height: 16),
-                  _buildPeriodSegmentedControl(),
+                  _buildPeriodSegmentedControl(colors),
                   const SizedBox(height: 20),
-                  _buildWeeklyDurationTrendCard(allRecords),
+                  _buildWeeklyDurationTrendCard(allRecords, colors),
                   const SizedBox(height: 20),
-                  _buildCircadianWindowCard(allRecords),
+                  _buildCircadianWindowCard(allRecords, colors),
                   const SizedBox(height: 20),
-                  _buildStabilityAnalysisCard(allRecords),
+                  _buildStabilityAnalysisCard(allRecords, colors),
                   const SizedBox(height: 20),
-                  _buildMedicalDisclaimerCard(),
+                  _buildMedicalDisclaimerCard(colors),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -142,9 +140,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     );
   }
 
-  Widget _buildHeaderBar() {
-    const cardDark = Color(0xFF182238);
-
+  Widget _buildHeaderBar(BoboColors colors) {
     return Row(
       children: [
         Expanded(
@@ -157,18 +153,22 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF132B2B),
+            color: colors.isDark ? const Color(0xFF132B2B) : const Color(0xFFD1FAE5),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.sync_rounded, size: 14, color: Color(0xFF34D399)),
-              SizedBox(width: 4),
+              Icon(
+                Icons.sync_rounded,
+                size: 14,
+                color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+              ),
+              const SizedBox(width: 4),
               Text(
                 'Tersinkron',
                 style: TextStyle(
-                  color: Color(0xFF34D399),
+                  color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -179,13 +179,14 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            color: cardDark,
+          decoration: BoxDecoration(
+            color: colors.cardBg,
             shape: BoxShape.circle,
+            border: colors.isDark ? null : Border.all(color: colors.border),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.notifications_none_rounded,
-            color: Colors.white70,
+            color: colors.textSecondary,
             size: 18,
           ),
         ),
@@ -193,7 +194,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     );
   }
 
-  Widget _buildPageTitle() {
+  Widget _buildPageTitle(BoboColors colors) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -202,10 +203,10 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Visualisasi Pola',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -214,7 +215,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               Text(
                 'Pemetaan ritme sirkadian & siklus tidur bayi',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: colors.textMuted,
                   fontSize: 11,
                 ),
                 maxLines: 1,
@@ -224,7 +225,6 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        // Date range picker button (wrapped in Flexible / mainAxisSize: min)
         InkWell(
           onTap: () {
             setState(() {
@@ -235,31 +235,31 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF182238),
+              color: colors.cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              border: Border.all(color: colors.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_rounded,
-                  color: Color(0xFFFBBF24),
+                  color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                   size: 12,
                 ),
                 const SizedBox(width: 5),
                 Text(
                   _weekRangeLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 2),
-                const Icon(
+                Icon(
                   Icons.arrow_drop_down_rounded,
-                  color: Colors.white70,
+                  color: colors.textMuted,
                   size: 16,
                 ),
               ],
@@ -270,12 +270,12 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     );
   }
 
-  Widget _buildPeriodSegmentedControl() {
+  Widget _buildPeriodSegmentedControl(BoboColors colors) {
     final tabs = ['Harian', 'Mingguan', 'Bulanan'];
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF141C30),
+        color: colors.cardSecondaryBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -290,21 +290,30 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF222F50)
+                      ? colors.cardBg
                       : Colors.transparent,
                   border: isSelected
                       ? Border.all(
-                          color: const Color(0xFFFBBF24).withValues(alpha: 0.6),
+                          color: colors.accentYellow.withValues(alpha: 0.6),
                           width: 1.2,
                         )
                       : null,
                   borderRadius: BorderRadius.circular(10),
+                  boxShadow: isSelected && !colors.isDark
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   tabs[index],
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white54,
+                    color: isSelected ? colors.textPrimary : colors.textMuted,
                     fontSize: 12,
                     fontWeight: isSelected
                         ? FontWeight.bold
@@ -319,31 +328,26 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     );
   }
 
-  // Helper 3 warna ritme & performa:
-  // Kuning (Bagus / tercapai): 0xFFFBBF24
-  // Ungu (Sedang): 0xFF818CF8
-  // Agak abu / navy gelap (Kurang): 0xFF263255
-  Color _getPerformanceColor(double totalHours) {
-    if (totalHours <= 0) return const Color(0xFF263255);
+  Color _getPerformanceColor(double totalHours, BoboColors colors) {
+    if (totalHours <= 0) return colors.accentGray;
     final minTarget = widget.baby.sleepTarget.minTotalHours;
     if (totalHours >= minTarget) {
-      return const Color(0xFFFBBF24); // Bagus (Kuning)
+      return colors.accentYellow; // Bagus (Kuning)
     } else if (totalHours >= (minTarget * 0.7)) {
-      return const Color(0xFF818CF8); // Sedang (Ungu)
+      return colors.accentPurple; // Sedang (Ungu)
     } else {
-      return const Color(0xFF263255); // Kurang (Agak abu)
+      return colors.accentGray; // Kurang (Agak abu)
     }
   }
 
   // ==========================================
   // CARD 1: TREN DURASI TIDUR 7 HARI (BAR CHART)
   // ==========================================
-  Widget _buildWeeklyDurationTrendCard(List<SleepRecordModel> allRecords) {
-    const accentYellow = Color(0xFFFBBF24);
-    const purpleAccent = Color(0xFF818CF8);
-    const grayAccent = Color(0xFF263255);
+  Widget _buildWeeklyDurationTrendCard(List<SleepRecordModel> allRecords, BoboColors colors) {
+    final accentYellow = colors.accentYellow;
+    final purpleAccent = colors.accentPurple;
+    final grayAccent = colors.accentGray;
 
-    // Calculate data for the 7 days (Monday to Sunday)
     final startWeek = _startOfSelectedWeek;
     final List<Map<String, dynamic>> dayDataList = [];
     int totalWeekMinutes = 0;
@@ -353,7 +357,6 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
       final dayDate = startWeek.add(Duration(days: i));
       final nextDay = dayDate.add(const Duration(days: 1));
 
-      // Filter completed records on this day
       final dayRecords = allRecords.where((r) {
         if (r.endAt == null) return false;
         return !r.startAt.isBefore(dayDate) && r.startAt.isBefore(nextDay);
@@ -389,32 +392,30 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     final avgHours = avgDailyMinutes ~/ 60;
     final avgMins = avgDailyMinutes % 60;
 
-    // Max hours to scale bars (min scale 12 hours)
     final double maxHours = max(
       12.0,
       dayDataList.map((e) => e['totalHours'] as double).fold(0.0, max),
     );
 
-    final todayWeekday = DateTime.now().weekday - 1; // 0 = Mon, 6 = Sun
+    final todayWeekday = DateTime.now().weekday - 1;
 
     return BoboCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header info: Using Expanded to prevent horizontal overflow on small screens
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.bar_chart_rounded,
-                color: accentYellow,
+                color: colors.isDark ? accentYellow : const Color(0xFFD97706),
                 size: 20,
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Tren Durasi Tidur 7 Hari',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -425,13 +426,13 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.15),
+                  color: colors.isDark ? Colors.green.withValues(alpha: 0.15) : const Color(0xFFD1FAE5),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
+                child: Text(
                   '+32m vs mgg lalu',
                   style: TextStyle(
-                    color: Colors.greenAccent,
+                    color: colors.isDark ? Colors.greenAccent : const Color(0xFF059669),
                     fontSize: 9.5,
                     fontWeight: FontWeight.bold,
                   ),
@@ -443,13 +444,13 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           Text(
             'Rata-rata: ${avgHours.toString().padLeft(2, '0')}j ${avgMins.toString().padLeft(2, '0')}m / hari',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: colors.textMuted,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 24),
 
-          // 7-day Solid 3-Color Bars (Kuning, Ungu, Abu)
+          // 7-day Solid Bars
           SizedBox(
             height: 180,
             child: Row(
@@ -461,7 +462,6 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                 final bool isToday =
                     _weekOffset == 0 && d['dayIndex'] == todayWeekday;
 
-                // Scale bar height up to 130 max
                 const maxBarHeight = 130.0;
                 final barHeight = totalH > 0
                     ? (totalH / maxHours * maxBarHeight).clamp(
@@ -470,23 +470,22 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                       )
                     : 6.0;
 
-                final Color barColor = _getPerformanceColor(totalH);
+                final Color barColor = _getPerformanceColor(totalH, colors);
 
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Top label: total hours (e.g. 9.5j)
                     Text(
                       totalH > 0 ? '${totalH.toStringAsFixed(1)}j' : '-',
                       style: TextStyle(
-                        color: isToday ? accentYellow : Colors.white70,
+                        color: isToday
+                            ? (colors.isDark ? accentYellow : const Color(0xFFD97706))
+                            : colors.textSecondary,
                         fontSize: 10,
                         fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 6),
-
-                    // Solid Rounded Bar with 3 performance colors
                     Container(
                       width: 32,
                       height: barHeight,
@@ -496,12 +495,12 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    // Day Name Abbreviation
                     Text(
                       abbr,
                       style: TextStyle(
-                        color: isToday ? accentYellow : Colors.white60,
+                        color: isToday
+                            ? (colors.isDark ? accentYellow : const Color(0xFFD97706))
+                            : colors.textMuted,
                         fontSize: 11,
                         fontWeight: isToday
                             ? FontWeight.bold
@@ -515,41 +514,41 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
 
           const SizedBox(height: 16),
-          const Divider(color: Colors.white10),
+          Divider(color: colors.divider),
           const SizedBox(height: 6),
 
-          // Legend and target info (3 warna bersih: Bagus, Sedang, Kurang)
+          // Legend
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  const CircleAvatar(radius: 4, backgroundColor: accentYellow),
+                  CircleAvatar(radius: 4, backgroundColor: accentYellow),
                   const SizedBox(width: 5),
                   Text(
                     'Bagus',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: colors.textSecondary,
                       fontSize: 10,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const CircleAvatar(radius: 4, backgroundColor: purpleAccent),
+                  CircleAvatar(radius: 4, backgroundColor: purpleAccent),
                   const SizedBox(width: 5),
                   Text(
                     'Sedang',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: colors.textSecondary,
                       fontSize: 10,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const CircleAvatar(radius: 4, backgroundColor: grayAccent),
+                  CircleAvatar(radius: 4, backgroundColor: grayAccent),
                   const SizedBox(width: 5),
                   Text(
                     'Kurang',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: colors.textSecondary,
                       fontSize: 10,
                     ),
                   ),
@@ -558,7 +557,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               Text(
                 'Target: ${widget.baby.sleepTarget.totalTargetRangeLabel}',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: colors.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -570,33 +569,27 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
   }
 
   // ==========================================
-  // CARD 2: JENDELA TIDUR & SIRKADIAN (SENIN - MINGGU SELALU MUNCUL)
+  // CARD 2: JENDELA TIDUR & SIRKADIAN
   // ==========================================
-  Widget _buildCircadianWindowCard(List<SleepRecordModel> allRecords) {
-    const accentYellow = Color(0xFFFBBF24);
+  Widget _buildCircadianWindowCard(List<SleepRecordModel> allRecords, BoboColors colors) {
+    final accentYellow = colors.accentYellow;
 
-    // Selected week days: Senin (0) to Minggu (6)
     final startWeek = _startOfSelectedWeek;
     final now = DateTime.now();
-    final todayWeekday = now.weekday - 1; // 0 = Mon, 6 = Sun
+    final todayWeekday = now.weekday - 1;
 
-    // Group records by day in this week
     final List<Map<String, dynamic>> weekDaysData = [];
-
-    // Identify the latest day that has a recorded sleep session
     int latestRecordedDayIndex = -1;
 
     for (int i = 0; i < 7; i++) {
       final dayDate = startWeek.add(Duration(days: i));
       final nextDay = dayDate.add(const Duration(days: 1));
 
-      // Filter all completed sessions on this day
       final daySessions = allRecords.where((r) {
         if (r.endAt == null) return false;
         return !r.startAt.isBefore(dayDate) && r.startAt.isBefore(nextDay);
       }).toList();
 
-      // Sort by startAt ascending
       daySessions.sort((a, b) => a.startAt.compareTo(b.startAt));
 
       if (daySessions.isNotEmpty) {
@@ -620,31 +613,31 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.2),
+                  color: colors.isDark ? Colors.purple.withValues(alpha: 0.2) : const Color(0xFFEDE9FE),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bedtime_rounded,
-                  color: accentYellow,
+                  color: colors.isDark ? accentYellow : const Color(0xFF7C3AED),
                   size: 16,
                 ),
               ),
               const SizedBox(width: 10),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Jendela Tidur & Sirkadian',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     'Konsistensi jam tidur vs jam bangun',
-                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                    style: TextStyle(color: colors.textMuted, fontSize: 11),
                   ),
                 ],
               ),
@@ -652,31 +645,21 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Axis markers: 20:00, 23:00, 03:00, 06:30
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '20:00',
-                style: TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-              Text(
-                '23:00',
-                style: TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-              Text(
-                '03:00',
-                style: TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-              Text(
-                '06:30',
-                style: TextStyle(color: Colors.white38, fontSize: 10),
-              ),
-            ],
+          // Axis markers
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('20:00', style: TextStyle(color: colors.textMuted, fontSize: 10)),
+                Text('23:00', style: TextStyle(color: colors.textMuted, fontSize: 10)),
+                Text('03:00', style: TextStyle(color: colors.textMuted, fontSize: 10)),
+                Text('06:30', style: TextStyle(color: colors.textMuted, fontSize: 10)),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
 
-          // Render all 7 days: Senin - Minggu
+          // 7 days rows
           ...weekDaysData.map((dayData) {
             final int dayIndex = dayData['dayIndex'];
             final String dayName = dayData['dayName'];
@@ -689,6 +672,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
               sessions: sessions,
               isLatest: isLatest,
               isToday: isToday,
+              colors: colors,
             );
           }),
         ],
@@ -701,12 +685,11 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     required List<SleepRecordModel> sessions,
     required bool isLatest,
     required bool isToday,
+    required BoboColors colors,
   }) {
-    const accentYellow = Color(0xFFFBBF24);
-
+    final accentYellow = colors.accentYellow;
     final bool hasData = sessions.isNotEmpty;
 
-    // Hitung akumulasi & rentang jika ada beberapa sesi di hari tersebut
     int totalDayMinutes = 0;
     DateTime? earliestStart;
     DateTime? latestEnd;
@@ -748,7 +731,9 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                   Text(
                     dayName,
                     style: TextStyle(
-                      color: isLatest ? accentYellow : Colors.white,
+                      color: isLatest
+                          ? (colors.isDark ? accentYellow : const Color(0xFFD97706))
+                          : colors.textPrimary,
                       fontSize: 12,
                       fontWeight: isLatest || isToday
                           ? FontWeight.bold
@@ -766,10 +751,10 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                         color: accentYellow.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Terbaru',
                         style: TextStyle(
-                          color: accentYellow,
+                          color: colors.isDark ? accentYellow : const Color(0xFFD97706),
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
@@ -783,13 +768,13 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: colors.pillBg,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Hari ini',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: colors.textSecondary,
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
                         ),
@@ -804,8 +789,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                     : 'Belum ada catatan',
                 style: TextStyle(
                   color: hasData
-                      ? Colors.white.withValues(alpha: 0.6)
-                      : Colors.white24,
+                      ? colors.textSecondary
+                      : colors.textMuted,
                   fontSize: 11,
                 ),
               ),
@@ -813,17 +798,17 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
           const SizedBox(height: 6),
 
-          // Pill Bar (Warna solid elegan: Kuning untuk Bagus, Ungu untuk Sedang, Abu-abu jika Kurang)
+          // Pill Bar
           Container(
             height: 28,
             decoration: BoxDecoration(
               color: hasData
-                  ? _getPerformanceColor(totalHours.toDouble())
-                  : Colors.white.withValues(alpha: 0.03),
+                  ? _getPerformanceColor(totalHours.toDouble(), colors)
+                  : colors.cardSecondaryBg,
               borderRadius: BorderRadius.circular(14),
               border: !hasData
                   ? Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: colors.border,
                       width: 1,
                     )
                   : null,
@@ -836,12 +821,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           startStr,
-                          style: TextStyle(
-                            color:
-                                _getPerformanceColor(totalHours.toDouble()) ==
-                                    accentYellow
-                                ? Colors.black
-                                : Colors.white,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -869,12 +850,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           endStr,
-                          style: TextStyle(
-                            color:
-                                _getPerformanceColor(totalHours.toDouble()) ==
-                                    accentYellow
-                                ? Colors.black
-                                : Colors.white,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -886,7 +863,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                     child: Text(
                       '- Kosong -',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: colors.textMuted,
                         fontSize: 10,
                         fontStyle: FontStyle.italic,
                       ),
@@ -901,8 +878,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
   // ==========================================
   // CARD 3: ANALISIS STABILITAS & KUALITAS
   // ==========================================
-  Widget _buildStabilityAnalysisCard(List<SleepRecordModel> allRecords) {
-    // Calculate Average bedtime & wake time
+  Widget _buildStabilityAnalysisCard(List<SleepRecordModel> allRecords, BoboColors colors) {
     int totalBedMinutes = 0;
     int totalWakeMinutes = 0;
     int count = 0;
@@ -938,18 +914,18 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.verified_outlined,
                     color: Color(0xFF34D399),
                     size: 18,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'ANALISIS STABILITAS',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
@@ -963,21 +939,21 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF132B2B),
+                  color: colors.isDark ? const Color(0xFF132B2B) : const Color(0xFFD1FAE5),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.star_rounded,
-                      color: Color(0xFF34D399),
+                      color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                       size: 12,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'Cukup Teratur (85%)',
                       style: TextStyle(
-                        color: Color(0xFF34D399),
+                        color: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -989,7 +965,6 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // 3 Metric Boxes: Rata-rata Tidur, Rata-rata Bangun, Kualitas Dominan
           Row(
             children: [
               Expanded(
@@ -997,6 +972,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                   label: 'Rata-rata Tidur',
                   value: '$bedHourStr:$bedMinStr',
                   subtext: 'WIB (Malam)',
+                  colors: colors,
                 ),
               ),
               const SizedBox(width: 10),
@@ -1005,6 +981,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                   label: 'Rata-rata Bangun',
                   value: '$wakeHourStr:$wakeMinStr',
                   subtext: 'WIB (Pagi)',
+                  colors: colors,
                 ),
               ),
               const SizedBox(width: 10),
@@ -1013,7 +990,8 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
                   label: 'Kualitas Dominan',
                   value: '$deepPercent%',
                   subtext: 'Nyenyak (Deep)',
-                  valueColor: const Color(0xFF34D399),
+                  valueColor: colors.isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                  colors: colors,
                 ),
               ),
             ],
@@ -1027,12 +1005,13 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
     required String label,
     required String value,
     required String subtext,
-    Color valueColor = Colors.white,
+    Color? valueColor,
+    required BoboColors colors,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF141C30),
+        color: colors.cardSecondaryBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -1042,7 +1021,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: colors.textMuted,
               fontSize: 10,
             ),
           ),
@@ -1050,7 +1029,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
           Text(
             value,
             style: TextStyle(
-              color: valueColor,
+              color: valueColor ?? colors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -1060,7 +1039,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
             subtext,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: colors.textMuted,
               fontSize: 9,
             ),
           ),
@@ -1070,22 +1049,22 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
   }
 
   // ==========================================
-  // CARD 4: MEDICAL DISCLAIMER (PRD & REQUIREMENT NON-CLINICAL RULE)
+  // CARD 4: MEDICAL DISCLAIMER
   // ==========================================
-  Widget _buildMedicalDisclaimerCard() {
+  Widget _buildMedicalDisclaimerCard(BoboColors colors) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF141C30),
+        color: colors.cardSecondaryBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.info_outline_rounded,
-            color: Colors.white.withValues(alpha: 0.4),
+            color: colors.textMuted,
             size: 18,
           ),
           const SizedBox(width: 10),
@@ -1093,7 +1072,7 @@ class _SleepTrendsScreenState extends State<SleepTrendsScreen> {
             child: Text(
               'Informasi berdasarkan catatan observasi mandiri orang tua dan bukan merupakan diagnosis atau saran medis klinis. Konsultasikan dengan dokter spesialis anak bila bayi mengalami gangguan tidur berulang.',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: colors.textSecondary,
                 fontSize: 10.5,
                 height: 1.4,
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/app_theme.dart';
+import '../../config/bobo_colors.dart';
 import '../../models/baby_profile_model.dart';
 import '../../models/sleep_record_model.dart';
 import '../../services/sleep_service.dart';
@@ -70,20 +71,21 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
   }
 
   Future<void> _confirmDelete(SleepRecordModel record) async {
+    final colors = BoboColors.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF182238),
+        backgroundColor: colors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Hapus Catatan', style: TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('Hapus Catatan', style: TextStyle(color: colors.textPrimary)),
+        content: Text(
           'Apakah Anda yakin ingin menghapus catatan tidur ini?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: colors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Batal', style: TextStyle(color: Colors.white60)),
+            child: Text('Batal', style: TextStyle(color: colors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -104,7 +106,7 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Catatan berhasil dihapus'),
+              content: Text('Catatan berhasil dihapus.'),
               backgroundColor: AppTheme.successGreen,
             ),
           );
@@ -112,7 +114,10 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString()), backgroundColor: AppTheme.errorRed),
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppTheme.errorRed,
+            ),
           );
         }
       }
@@ -121,36 +126,33 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bgDark = Color(0xFF0F1528);
-    const cardDark = Color(0xFF182238);
-    const accentYellow = Color(0xFFFBBF24);
+    final colors = BoboColors.of(context);
 
     return Scaffold(
-      backgroundColor: bgDark,
+      backgroundColor: colors.bg,
       body: SafeArea(
         child: Column(
           children: [
             // Top Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Riwayat Tidur',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
+                          color: colors.textPrimary,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       Text(
                         'Catatan untuk ${widget.baby.name} (${widget.baby.displayAge})',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: colors.textMuted,
                           fontSize: 12,
                         ),
                       ),
@@ -172,7 +174,7 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentYellow,
+                        color: colors.accentYellow,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.add_rounded, color: Colors.black, size: 20),
@@ -189,19 +191,28 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: cardDark,
+                  color: colors.cardBg,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  border: Border.all(color: colors.border),
+                  boxShadow: colors.isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, color: accentYellow, size: 20),
+                    Icon(Icons.info_outline_rounded, color: colors.accentYellow, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Target tidur usia ${widget.baby.sleepTarget.ageGroupLabel}: ${widget.baby.sleepTarget.totalTargetRangeLabel} / hari (Siang: ${widget.baby.sleepTarget.typicalNapHours}, Malam: ${widget.baby.sleepTarget.typicalNightHours})',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: colors.textSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -233,7 +244,7 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                             Text(
                               'Terjadi kesalahan saat memuat data: ${snapshot.error}',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white70, fontSize: 13),
+                              style: TextStyle(color: colors.textSecondary, fontSize: 13),
                             ),
                           ],
                         ),
@@ -242,8 +253,8 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                   }
 
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: accentYellow),
+                    return Center(
+                      child: CircularProgressIndicator(color: colors.accentYellow),
                     );
                   }
 
@@ -253,16 +264,16 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.bedtime_outlined, color: Colors.white.withValues(alpha: 0.3), size: 64),
+                          Icon(Icons.bedtime_outlined, color: colors.textMuted, size: 64),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Belum Ada Catatan Tidur',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: colors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Mulai catat tidur si kecil dari dashboard atau tekan + di atas.',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                            style: TextStyle(color: colors.textMuted, fontSize: 12),
                           ),
                         ],
                       ),
@@ -299,8 +310,8 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                               children: [
                                 Text(
                                   _formatDayHeader(firstRecordDate),
-                                  style: const TextStyle(
-                                    color: Colors.white70,
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -308,13 +319,13 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF232D4B),
+                                    color: colors.isDark ? const Color(0xFF232D4B) : const Color(0xFFFEF3C7),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
                                     'Total: $totalDayStr • ${dayRecords.length} Sesi',
-                                    style: const TextStyle(
-                                      color: accentYellow,
+                                    style: TextStyle(
+                                      color: colors.isDark ? colors.accentYellow : const Color(0xFFB45309),
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -325,7 +336,7 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                           ),
 
                           // Records of this day
-                          ...dayRecords.map((r) => _buildRecordCard(r)),
+                          ...dayRecords.map((r) => _buildRecordCard(r, colors)),
                           const SizedBox(height: 10),
                         ],
                       );
@@ -340,17 +351,25 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
     );
   }
 
-  Widget _buildRecordCard(SleepRecordModel record) {
-    const cardDark = Color(0xFF182238);
-    const accentYellow = Color(0xFFFBBF24);
+  Widget _buildRecordCard(SleepRecordModel record, BoboColors colors) {
     final isNight = record.sleepType == 'night';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cardDark,
+        color: colors.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: colors.isDark ? null : Border.all(color: colors.border),
+        boxShadow: colors.isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,13 +380,13 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isNight
-                      ? const Color(0xFF263255)
-                      : Colors.amber.withValues(alpha: 0.15),
+                      ? (colors.isDark ? const Color(0xFF263255) : const Color(0xFFEEF2FF))
+                      : (colors.isDark ? Colors.amber.withValues(alpha: 0.15) : const Color(0xFFFEF3C7)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isNight ? Icons.nightlight_round : Icons.wb_sunny_rounded,
-                  color: isNight ? const Color(0xFF818CF8) : accentYellow,
+                  color: isNight ? colors.accentPurple : (colors.isDark ? colors.accentYellow : const Color(0xFFD97706)),
                   size: 18,
                 ),
               ),
@@ -380,8 +399,8 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                       children: [
                         Text(
                           isNight ? 'Tidur Malam' : 'Tidur Siang (Nap)',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -394,10 +413,10 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                               color: Colors.green.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Sedang Berlangsung',
                               style: TextStyle(
-                                color: Colors.greenAccent,
+                                color: colors.isDark ? Colors.greenAccent : Colors.green.shade700,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -409,7 +428,7 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                     Text(
                       '${_formatTime(record.startAt)}  ➔  ${record.endAt != null ? _formatTime(record.endAt!) : 'Sekarang'}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: colors.textMuted,
                         fontSize: 12,
                       ),
                     ),
@@ -421,15 +440,15 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                 children: [
                   Text(
                     record.formattedDuration,
-                    style: const TextStyle(
-                      color: accentYellow,
+                    style: TextStyle(
+                      color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert_rounded, color: Colors.white.withValues(alpha: 0.4), size: 18),
-                    color: const Color(0xFF222C46),
+                    icon: Icon(Icons.more_vert_rounded, color: colors.textMuted, size: 18),
+                    color: colors.cardSecondaryBg,
                     onSelected: (val) {
                       if (val == 'delete') {
                         _confirmDelete(record);
@@ -463,13 +482,13 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: colors.pillBg,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     tag,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: colors.textSecondary,
                       fontSize: 10,
                     ),
                   ),
@@ -485,18 +504,18 @@ class _SleepHistoryScreenState extends State<SleepHistoryScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: colors.cardSecondaryBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.notes_rounded, color: Colors.white.withValues(alpha: 0.4), size: 14),
+                  Icon(Icons.notes_rounded, color: colors.textMuted, size: 14),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       record.note!,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: colors.textSecondary,
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
                       ),

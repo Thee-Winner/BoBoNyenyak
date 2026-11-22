@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
+import '../config/bobo_colors.dart';
 
-/// Reusable Bottom Navigation Bar for BoboNyenyak.
-///
-/// Provides consistent dark theme navigation across screens:
-/// - 0: Home
-/// - 1: History
-/// - 2: Trends
-/// - 3: Settings
+/// Reusable Bottom Navigation Bar for BoboNyenyak supporting Dark & Light modes.
 class BoboBottomNavbar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -19,22 +14,20 @@ class BoboBottomNavbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const bgDark = Color(0xFF0F1528);
-    const borderColor = Color(0xFF1E2846);
-    const accentYellow = Color(0xFFFBBF24);
+    final colors = BoboColors.of(context);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: bgDark,
-        border: Border(top: BorderSide(color: borderColor, width: 1)),
+      decoration: BoxDecoration(
+        color: colors.bottomNavBg,
+        border: Border(top: BorderSide(color: colors.border, width: 1)),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onTap,
-        backgroundColor: bgDark,
+        backgroundColor: colors.bottomNavBg,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: accentYellow,
-        unselectedItemColor: Colors.white38,
+        selectedItemColor: colors.isDark ? colors.accentYellow : const Color(0xFF1B2A4A),
+        unselectedItemColor: colors.isDark ? Colors.white38 : const Color(0xFF8E99AF),
         selectedLabelStyle: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,

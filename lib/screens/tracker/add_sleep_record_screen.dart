@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/app_theme.dart';
+import '../../config/bobo_colors.dart';
 import '../../models/baby_profile_model.dart';
 import '../../services/sleep_service.dart';
 
@@ -50,9 +51,6 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
       _endDateTime = now;
       _autoDetectSleepType();
     } else {
-      // Default cerdas sesuai waktu sekarang:
-      // Jika user buka di siang hari (06:00 - 18:00), default tidur siang 1-2 jam yang lalu
-      // Jika malam hari, default tidur malam
       if (now.hour >= 6 && now.hour < 19) {
         _sleepType = 'nap';
         _startDateTime = DateTime(
@@ -85,7 +83,6 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
 
   void _autoDetectSleepType() {
     if (_isManualSleepType) return;
-    // If sleep starts between 19:00 and 05:59, classify as 'night', else 'nap'
     final hour = _startDateTime.hour;
     if (hour >= 19 || hour < 6) {
       _sleepType = 'night';
@@ -117,26 +114,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: initial.hour, minute: initial.minute),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFFBBF24),
-              onPrimary: Colors.black,
-              surface: Color(0xFF1E2640),
-              onSurface: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (pickedTime == null) return;
 
     setState(() {
       if (isStart) {
-        // Simpan selisih durasi sebelum mengubah waktu mulai
         final oldDuration = _endDateTime.difference(_startDateTime);
 
         _startDateTime = DateTime(
@@ -147,7 +130,6 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
           pickedTime.minute,
         );
 
-        // Pertahankan tanggal hari yang sama untuk _endDateTime
         DateTime candidateEnd = DateTime(
           _startDateTime.year,
           _startDateTime.month,
@@ -156,23 +138,19 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
           _endDateTime.minute,
         );
 
-        // Jika waktu akhir sebelum waktu mulai, cek apakah melewati tengah malam (tidur malam)
         if (candidateEnd.isBefore(_startDateTime)) {
-          // Bila jam mulai malam (misal >= 19:00) dan bangun pagi (misal < 12:00)
           if (_startDateTime.hour >= 18 && candidateEnd.hour < 14) {
             candidateEnd = candidateEnd.add(const Duration(days: 1));
           } else {
-            // Kalau tidur siang atau waktu tidak valid, geser waktu bangun maju sesuai durasi wajar
             final safeDuration =
                 (oldDuration.inMinutes > 0 && oldDuration.inMinutes <= 480)
-                ? oldDuration
-                : const Duration(hours: 1);
+                    ? oldDuration
+                    : const Duration(hours: 1);
             candidateEnd = _startDateTime.add(safeDuration);
           }
         }
         _endDateTime = candidateEnd;
       } else {
-        // Set end time pada tanggal yang sama dengan start
         DateTime candidateEnd = DateTime(
           _startDateTime.year,
           _startDateTime.month,
@@ -181,14 +159,10 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
           pickedTime.minute,
         );
 
-        // Jika jam bangun lebih kecil dari jam tidur:
-        // Cek apakah ini sesi malam yang melewati tengah malam (misal tidur 21:00 bangun 06:00)
         if (candidateEnd.isBefore(_startDateTime)) {
           if (_startDateTime.hour >= 18 && candidateEnd.hour < 14) {
             candidateEnd = candidateEnd.add(const Duration(days: 1));
           } else {
-            // Jika jam siang (misal tidur 14:00 lalu pilih jam bangun 13:00), jangan loncat hari berikutnya,
-            // beri toleransi atau set minimal sama / selisih wajar
             candidateEnd = _startDateTime.add(const Duration(hours: 1));
           }
         }
@@ -230,7 +204,6 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
 
     try {
       if (widget.activeRecordId != null) {
-        // Mode menyelesaikan sesi tidur yang sedang aktif
         await _sleepService.stopSleepSession(
           uid: widget.uid,
           babyId: widget.baby.id,
@@ -242,7 +215,6 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
               : _noteController.text.trim(),
         );
       } else {
-        // Mode input manual baru
         await _sleepService.createManualSleepRecord(
           uid: widget.uid,
           babyId: widget.baby.id,
@@ -281,13 +253,10 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Dark theme matching the UI design
-    const bgDark = Color(0xFF0F1528);
-    const cardDark = Color(0xFF182238);
-    const accentYellow = Color(0xFFFBBF24);
+    final colors = BoboColors.of(context);
 
     return Scaffold(
-      backgroundColor: bgDark,
+      backgroundColor: colors.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -298,13 +267,14 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: cardDark,
+                      color: colors.cardBg,
                       borderRadius: BorderRadius.circular(12),
+                      border: colors.isDark ? null : Border.all(color: colors.border),
                     ),
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
+                        color: colors.textPrimary,
                         size: 18,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -315,10 +285,10 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Catat Waktu Tidur',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: colors.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -326,7 +296,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         Text(
                           'Input manual atau koreksi sesi tidur bayi',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: colors.textMuted,
                             fontSize: 12,
                           ),
                         ),
@@ -353,8 +323,9 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: cardDark,
+                        color: colors.cardBg,
                         borderRadius: BorderRadius.circular(16),
+                        border: colors.isDark ? null : Border.all(color: colors.border),
                       ),
                       child: Row(
                         children: [
@@ -375,14 +346,14 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                 Text(
                                   'Profil Bayi Aktif',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: colors.textMuted,
                                     fontSize: 11,
                                   ),
                                 ),
                                 Text(
                                   '${widget.baby.name} (${widget.baby.displayAge})',
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -400,7 +371,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: cardDark,
+                        color: colors.cardSecondaryBg,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
@@ -421,12 +392,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: _sleepType == 'night'
-                                      ? const Color(0xFF263255)
+                                      ? colors.cardBg
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(11),
                                   border: _sleepType == 'night'
                                       ? Border.all(
-                                          color: accentYellow,
+                                          color: colors.accentYellow,
                                           width: 1.2,
                                         )
                                       : null,
@@ -438,16 +409,16 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                       Icons.nightlight_round,
                                       size: 16,
                                       color: _sleepType == 'night'
-                                          ? accentYellow
-                                          : Colors.white54,
+                                          ? (colors.isDark ? colors.accentYellow : const Color(0xFFD97706))
+                                          : colors.textMuted,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Tidur Malam',
                                       style: TextStyle(
                                         color: _sleepType == 'night'
-                                            ? Colors.white
-                                            : Colors.white54,
+                                            ? colors.textPrimary
+                                            : colors.textMuted,
                                         fontSize: 13,
                                         fontWeight: _sleepType == 'night'
                                             ? FontWeight.bold
@@ -476,12 +447,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: _sleepType == 'nap'
-                                      ? const Color(0xFF263255)
+                                      ? colors.cardBg
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(11),
                                   border: _sleepType == 'nap'
                                       ? Border.all(
-                                          color: const Color(0xFF818CF8),
+                                          color: colors.accentPurple,
                                           width: 1.2,
                                         )
                                       : null,
@@ -493,16 +464,16 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                       Icons.wb_sunny_rounded,
                                       size: 16,
                                       color: _sleepType == 'nap'
-                                          ? const Color(0xFF818CF8)
-                                          : Colors.white54,
+                                          ? colors.accentPurple
+                                          : colors.textMuted,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Tidur Siang (Nap)',
                                       style: TextStyle(
                                         color: _sleepType == 'nap'
-                                            ? Colors.white
-                                            : Colors.white54,
+                                            ? colors.textPrimary
+                                            : colors.textMuted,
                                         fontSize: 13,
                                         fontWeight: _sleepType == 'nap'
                                             ? FontWeight.bold
@@ -528,12 +499,13 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                             title: 'Mulai Tidur',
                             timeStr: _formatTime(_startDateTime),
                             icon: Icons.nightlight_round,
-                            iconColor: const Color(0xFF818CF8),
+                            iconColor: colors.accentPurple,
                             onTap: () => _pickTime(isStart: true),
                             onMinus: () =>
                                 _adjustTime(isStart: true, minutes: -15),
                             onPlus: () =>
                                 _adjustTime(isStart: true, minutes: 15),
+                            colors: colors,
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -542,12 +514,13 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                             title: 'Waktu Bangun',
                             timeStr: _formatTime(_endDateTime),
                             icon: Icons.wb_sunny_rounded,
-                            iconColor: const Color(0xFFFBBF24),
+                            iconColor: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                             onTap: () => _pickTime(isStart: false),
                             onMinus: () =>
                                 _adjustTime(isStart: false, minutes: -15),
                             onPlus: () =>
                                 _adjustTime(isStart: false, minutes: 15),
+                            colors: colors,
                           ),
                         ),
                       ],
@@ -559,20 +532,21 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: cardDark,
+                        color: colors.cardBg,
                         borderRadius: BorderRadius.circular(16),
+                        border: colors.isDark ? null : Border.all(color: colors.border),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF232D4B),
+                              color: colors.cardSecondaryBg,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.bed_rounded,
-                              color: accentYellow,
+                              color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                               size: 24,
                             ),
                           ),
@@ -584,7 +558,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                 Text(
                                   'KALKULASI DURASI',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: colors.textMuted,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
@@ -595,8 +569,8 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                   children: [
                                     Text(
                                       _formattedDuration,
-                                      style: const TextStyle(
-                                        color: accentYellow,
+                                      style: TextStyle(
+                                        color: colors.isDark ? colors.accentYellow : const Color(0xFFD97706),
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -613,10 +587,10 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                         ),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         '✓ Ideal',
                                         style: TextStyle(
-                                          color: Colors.greenAccent,
+                                          color: colors.isDark ? Colors.greenAccent : const Color(0xFF059669),
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -634,7 +608,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E2846),
+                              color: colors.cardSecondaryBg,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -644,8 +618,8 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                   _sleepType == 'night'
                                       ? 'Tidur Malam'
                                       : 'Tidur Siang',
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -655,7 +629,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                       ? 'Target: 7-9 jam'
                                       : 'Target: 1-2 jam',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: colors.textMuted,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -672,10 +646,10 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Kondisi & Catatan Sesi',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -683,7 +657,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         Text(
                           'Pilih yang relevan',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: colors.textMuted,
                             fontSize: 11,
                           ),
                         ),
@@ -717,12 +691,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF263255)
-                                  : cardDark,
+                                  ? colors.pillBg
+                                  : colors.cardBg,
                               border: Border.all(
                                 color: isSelected
-                                    ? accentYellow
-                                    : Colors.transparent,
+                                    ? colors.accentYellow
+                                    : (colors.isDark ? Colors.transparent : colors.border),
                                 width: 1.2,
                               ),
                               borderRadius: BorderRadius.circular(20),
@@ -734,16 +708,16 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                   icon,
                                   size: 14,
                                   color: isSelected
-                                      ? accentYellow
-                                      : Colors.white70,
+                                      ? (colors.isDark ? colors.accentYellow : const Color(0xFFD97706))
+                                      : colors.textMuted,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   label,
                                   style: TextStyle(
                                     color: isSelected
-                                        ? Colors.white
-                                        : Colors.white70,
+                                        ? colors.textPrimary
+                                        : colors.textSecondary,
                                     fontSize: 12,
                                     fontWeight: isSelected
                                         ? FontWeight.w600
@@ -763,7 +737,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     Text(
                       'Catatan Tambahan (Opsional)',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: colors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -775,28 +749,30 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: cardDark,
+                        color: colors.cardBg,
                         borderRadius: BorderRadius.circular(16),
+                        border: colors.isDark ? null : Border.all(color: colors.border),
                       ),
                       child: TextField(
                         controller: _noteController,
                         maxLines: 3,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 13,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Contoh: Suhu kamar 24°C, sempat terbangun pukul 03:00...',
+                          hintText:
+                              'Contoh: Suhu kamar 24°C, sempat terbangun pukul 03:00...',
                           hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: colors.textMuted,
                             fontSize: 12,
                           ),
                           filled: true,
-                          fillColor: cardDark,
+                          fillColor: colors.cardBg,
                           border: InputBorder.none,
                           suffixIcon: Icon(
                             Icons.edit_note_rounded,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: colors.textMuted,
                           ),
                         ),
                       ),
@@ -811,7 +787,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _isLoading ? null : _handleSave,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: accentYellow,
+                          backgroundColor: colors.accentYellow,
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -851,7 +827,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: colors.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -860,7 +836,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                         child: Text(
                           'Batal',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -887,14 +863,14 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
     required VoidCallback onTap,
     required VoidCallback onMinus,
     required VoidCallback onPlus,
+    required BoboColors colors,
   }) {
-    const cardDark = Color(0xFF182238);
-
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cardDark,
+        color: colors.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: colors.isDark ? null : Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -905,7 +881,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: colors.textMuted,
                   fontSize: 11,
                 ),
               ),
@@ -917,8 +893,8 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
             onTap: onTap,
             child: Text(
               timeStr,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -937,12 +913,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: colors.cardSecondaryBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
+                  child: Text(
                     '−',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: colors.textPrimary, fontSize: 14),
                   ),
                 ),
               ),
@@ -951,7 +927,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                 child: Text(
                   'Ubah Jam',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: colors.textMuted,
                     fontSize: 10,
                   ),
                 ),
@@ -965,12 +941,12 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: colors.cardSecondaryBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
+                  child: Text(
                     '+',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: colors.textPrimary, fontSize: 14),
                   ),
                 ),
               ),
