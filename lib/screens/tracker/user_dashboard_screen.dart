@@ -13,6 +13,7 @@ import '../../widgets/bobo_bottom_navbar.dart';
 import '../../widgets/daily_summary_card.dart';
 import '../auth/login_screen.dart';
 import '../history/sleep_history_screen.dart';
+import '../trends/sleep_trends_screen.dart';
 import 'add_sleep_record_screen.dart';
 
 /// User Dashboard — primary tracker screen for baby caregivers.
@@ -205,10 +206,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ? SleepHistoryScreen(uid: widget.user.uid, baby: _currentBaby!)
             : _buildPlaceholderPage('Riwayat Tidur', Icons.history_rounded);
       case 2:
-        return _buildPlaceholderPage(
-          'Tren & Pola Tidur',
-          Icons.insights_rounded,
-        );
+        return _currentBaby != null
+            ? SleepTrendsScreen(uid: widget.user.uid, baby: _currentBaby!)
+            : _buildPlaceholderPage('Tren & Pola Tidur', Icons.insights_rounded);
       case 3:
         return _buildPlaceholderPage('Pengaturan', Icons.settings_rounded);
       default:
@@ -268,7 +268,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                     onDetailTap: () => setState(() => _currentNavIndex = 1),
                   ),
                   const SizedBox(height: 20),
-                  _buildRhythmPlaceholderCard(),
+                  _buildRhythmDynamicCard(),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -626,8 +626,96 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     );
   }
 
-  Widget _buildRhythmPlaceholderCard() {
+  Widget _buildRhythmDynamicCard() {
+    if (_currentBaby == null) return const SizedBox.shrink();
+
+    return StreamBuilder<List<SleepRecordModel>>(
+      stream: _sleepService.streamAllSleepRecords(
+        uid: widget.user.uid,
+        babyId: _currentBaby!.id,
+      ),
+      builder: (context, snapshot) {
+        final allRecords = snapshot.data ?? [];
+        return _buildRhythmContent(allRecords);
+      },
+    );
+  }
+
+  Widget _buildRhythmContent(List<SleepRecordModel> allRecords) {
     const cardDark = Color(0xFF182238);
+    const accentYellow = Color(0xFFFBBF24);
+    const purpleAccent = Color(0xFF818CF8);
+    const grayAccent = Color(0xFF263255);
+
+    final now = DateTime.now();
+    // Monday of the current week (weekday: 1=Mon .. 7=Sun)
+    final startOfWeek = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+
+    final dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    final minTarget = (_currentBaby?.sleepTarget.minTotalHours ?? 14).toDouble();
+
+    // Calculate duration for each of the 7 days (Senin - Minggu)
+    final List<Map<String, dynamic>> weekBars = [];
+    int totalDeepSleepMinutes = 0;
+    int totalRecordedMinutes = 0;
+
+    for (int i = 0; i < 7; i++) {
+      final dayDate = startOfWeek.add(Duration(days: i));
+      final nextDay = dayDate.add(const Duration(days: 1));
+
+      final daySessions = allRecords.where((r) {
+        if (r.endAt == null) return false;
+        return !r.startAt.isBefore(dayDate) && r.startAt.isBefore(nextDay);
+      }).toList();
+
+      int dayMinutes = 0;
+      for (final s in daySessions) {
+        dayMinutes += s.durationInMinutes;
+        totalRecordedMinutes += s.durationInMinutes;
+        // Deep sleep indicator from tags (nyenyak / deep)
+        final isDeep = s.tags.any(
+          (t) =>
+              t.toLowerCase().contains('nyenyak') ||
+              t.toLowerCase().contains('deep'),
+        );
+        if (isDeep || (s.sleepType == 'night' && s.durationInMinutes > 180)) {
+          totalDeepSleepMinutes += s.durationInMinutes;
+        }
+      }
+
+      final double totalHours = dayMinutes / 60.0;
+
+      // 3 clean colors matching SleepTrendsScreen
+      Color barColor;
+      if (totalHours >= minTarget) {
+        barColor = accentYellow; // Bagus
+      } else if (totalHours >= minTarget * 0.7) {
+        barColor = purpleAccent; // Sedang
+      } else {
+        barColor = grayAccent; // Kurang / Kosong
+      }
+
+      // Height between 14 and 48 proportional to target
+      final double barHeight = totalHours > 0
+          ? (totalHours / (minTarget > 0 ? minTarget : 14.0) * 44.0).clamp(14.0, 48.0)
+          : 12.0;
+
+      weekBars.add({
+        'day': dayLabels[i],
+        'height': barHeight,
+        'color': barColor,
+        'hasData': totalHours > 0,
+        'isToday': (now.weekday - 1) == i,
+      });
+    }
+
+    // Quality Nyenyak percentage
+    int nyenyakPercent = 88; // Default good baseline
+    if (totalRecordedMinutes > 0) {
+      nyenyakPercent =
+          ((totalDeepSleepMinutes / totalRecordedMinutes) * 100).clamp(50, 98).toInt();
+    }
 
     return Container(
       width: double.infinity,
@@ -662,9 +750,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                   color: const Color(0xFF263255),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  '88% Nyenyak',
-                  style: TextStyle(
+                child: Text(
+                  '$nyenyakPercent% Nyenyak',
+                  style: const TextStyle(
                     color: Colors.amber,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -674,19 +762,39 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          // Bar Rhythm Mockup
+          // 7 Bar Rhythm (Senin - Minggu)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildRhythmBar(20, const Color(0xFF263255)),
-              _buildRhythmBar(35, const Color(0xFF818CF8)),
-              _buildRhythmBar(45, const Color(0xFF818CF8)),
-              _buildRhythmBar(30, const Color(0xFF818CF8)),
-              _buildRhythmBar(25, const Color(0xFFFBBF24)),
-              _buildRhythmBar(40, const Color(0xFF818CF8)),
-              _buildRhythmBar(48, const Color(0xFFFBBF24)),
-            ],
+            children: weekBars.map((bar) {
+              final double height = bar['height'];
+              final Color color = bar['color'];
+              final String day = bar['day'];
+              final bool isToday = bar['isToday'];
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 32,
+                    height: height,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    day,
+                    style: TextStyle(
+                      color: isToday ? accentYellow : Colors.white54,
+                      fontSize: 10,
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
           const SizedBox(height: 12),
           const Divider(color: Colors.white10),
@@ -715,17 +823,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRhythmBar(double height, Color color) {
-    return Container(
-      width: 32,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
       ),
     );
   }

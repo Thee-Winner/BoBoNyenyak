@@ -29,6 +29,7 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
   late DateTime _startDateTime;
   late DateTime _endDateTime;
   String _sleepType = 'night'; // 'night' or 'nap'
+  bool _isManualSleepType = false; // true if user explicitly toggled type
   final Set<String> _selectedTags = {'Tidur Nyenyak'};
   bool _isLoading = false;
 
@@ -47,18 +48,33 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
     if (widget.initialStartAt != null) {
       _startDateTime = widget.initialStartAt!;
       _endDateTime = now;
+      _autoDetectSleepType();
     } else {
-      // Default: Mulai 21:00, Bangun 06:00
-      _startDateTime = DateTime(now.year, now.month, now.day, 21, 0);
-      _endDateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        21,
-        0,
-      ).add(const Duration(hours: 9));
+      // Default cerdas sesuai waktu sekarang:
+      // Jika user buka di siang hari (06:00 - 18:00), default tidur siang 1-2 jam yang lalu
+      // Jika malam hari, default tidur malam
+      if (now.hour >= 6 && now.hour < 19) {
+        _sleepType = 'nap';
+        _startDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          (now.hour - 2).clamp(6, 23),
+          0,
+        );
+        _endDateTime = DateTime(now.year, now.month, now.day, now.hour, 0);
+      } else {
+        _sleepType = 'night';
+        _startDateTime = DateTime(now.year, now.month, now.day, 21, 0);
+        _endDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          21,
+          0,
+        ).add(const Duration(hours: 9));
+      }
     }
-    _autoDetectSleepType();
   }
 
   @override
@@ -68,7 +84,8 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
   }
 
   void _autoDetectSleepType() {
-    // If sleep starts between 19:00 and 05:00, classify as 'night', else 'nap'
+    if (_isManualSleepType) return;
+    // If sleep starts between 19:00 and 05:59, classify as 'night', else 'nap'
     final hour = _startDateTime.hour;
     if (hour >= 19 || hour < 6) {
       _sleepType = 'night';
@@ -119,6 +136,9 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
 
     setState(() {
       if (isStart) {
+        // Simpan selisih durasi sebelum mengubah waktu mulai
+        final oldDuration = _endDateTime.difference(_startDateTime);
+
         _startDateTime = DateTime(
           _startDateTime.year,
           _startDateTime.month,
@@ -126,23 +146,53 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
           pickedTime.hour,
           pickedTime.minute,
         );
-        // If end is now before start, shift end to match or advance by 1 hour
-        if (_endDateTime.isBefore(_startDateTime)) {
-          _endDateTime = _startDateTime.add(const Duration(hours: 1));
+
+        // Pertahankan tanggal hari yang sama untuk _endDateTime
+        DateTime candidateEnd = DateTime(
+          _startDateTime.year,
+          _startDateTime.month,
+          _startDateTime.day,
+          _endDateTime.hour,
+          _endDateTime.minute,
+        );
+
+        // Jika waktu akhir sebelum waktu mulai, cek apakah melewati tengah malam (tidur malam)
+        if (candidateEnd.isBefore(_startDateTime)) {
+          // Bila jam mulai malam (misal >= 19:00) dan bangun pagi (misal < 12:00)
+          if (_startDateTime.hour >= 18 && candidateEnd.hour < 14) {
+            candidateEnd = candidateEnd.add(const Duration(days: 1));
+          } else {
+            // Kalau tidur siang atau waktu tidak valid, geser waktu bangun maju sesuai durasi wajar
+            final safeDuration =
+                (oldDuration.inMinutes > 0 && oldDuration.inMinutes <= 480)
+                ? oldDuration
+                : const Duration(hours: 1);
+            candidateEnd = _startDateTime.add(safeDuration);
+          }
         }
+        _endDateTime = candidateEnd;
       } else {
-        var newEnd = DateTime(
-          _endDateTime.year,
-          _endDateTime.month,
-          _endDateTime.day,
+        // Set end time pada tanggal yang sama dengan start
+        DateTime candidateEnd = DateTime(
+          _startDateTime.year,
+          _startDateTime.month,
+          _startDateTime.day,
           pickedTime.hour,
           pickedTime.minute,
         );
-        // If end time is earlier in the day than start time, assume it spans midnight into the next day
-        if (newEnd.isBefore(_startDateTime)) {
-          newEnd = newEnd.add(const Duration(days: 1));
+
+        // Jika jam bangun lebih kecil dari jam tidur:
+        // Cek apakah ini sesi malam yang melewati tengah malam (misal tidur 21:00 bangun 06:00)
+        if (candidateEnd.isBefore(_startDateTime)) {
+          if (_startDateTime.hour >= 18 && candidateEnd.hour < 14) {
+            candidateEnd = candidateEnd.add(const Duration(days: 1));
+          } else {
+            // Jika jam siang (misal tidur 14:00 lalu pilih jam bangun 13:00), jangan loncat hari berikutnya,
+            // beri toleransi atau set minimal sama / selisih wajar
+            candidateEnd = _startDateTime.add(const Duration(hours: 1));
+          }
         }
-        _endDateTime = newEnd;
+        _endDateTime = candidateEnd;
       }
       _autoDetectSleepType();
     });
@@ -338,6 +388,130 @@ class _AddSleepRecordScreenState extends State<AddSleepRecordScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Sleep Type Selector (Tidur Malam vs Tidur Siang)
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: cardDark,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _sleepType = 'night';
+                                  _isManualSleepType = true;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(11),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _sleepType == 'night'
+                                      ? const Color(0xFF263255)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(11),
+                                  border: _sleepType == 'night'
+                                      ? Border.all(
+                                          color: accentYellow,
+                                          width: 1.2,
+                                        )
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.nightlight_round,
+                                      size: 16,
+                                      color: _sleepType == 'night'
+                                          ? accentYellow
+                                          : Colors.white54,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Tidur Malam',
+                                      style: TextStyle(
+                                        color: _sleepType == 'night'
+                                            ? Colors.white
+                                            : Colors.white54,
+                                        fontSize: 13,
+                                        fontWeight: _sleepType == 'night'
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _sleepType = 'nap';
+                                  _isManualSleepType = true;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(11),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _sleepType == 'nap'
+                                      ? const Color(0xFF263255)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(11),
+                                  border: _sleepType == 'nap'
+                                      ? Border.all(
+                                          color: const Color(0xFF818CF8),
+                                          width: 1.2,
+                                        )
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.wb_sunny_rounded,
+                                      size: 16,
+                                      color: _sleepType == 'nap'
+                                          ? const Color(0xFF818CF8)
+                                          : Colors.white54,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Tidur Siang (Nap)',
+                                      style: TextStyle(
+                                        color: _sleepType == 'nap'
+                                            ? Colors.white
+                                            : Colors.white54,
+                                        fontSize: 13,
+                                        fontWeight: _sleepType == 'nap'
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
