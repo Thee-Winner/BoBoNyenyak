@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109516881060",
+    "project_id": "bobonyenyak-app",
+    "storage_bucket": "bobonyenyak-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109516881060:android:79fe83b15df201162efa31",
+        "android_client_info": {
+          "package_name": "com.example.flutter_bobonyenyak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUxmMbvedtOchyfHDmKAc8IxqIFOCA7GE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
